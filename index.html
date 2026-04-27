@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -9,16 +10,16 @@
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   :root {
-    --bg: #1c1c1e;
-    --card: #2c2c2e;
-    --card2: #3a3a3c;
-    --accent: #30d158;
-    --accent2: #0a84ff;
-    --red: #ff453a;
-    --text: #ffffff;
-    --text2: #ebebf5cc;
-    --text3: #ebebf560;
-    --border: #ffffff18;
+    --bg: #f2f2f7;
+    --card: #ffffff;
+    --card2: #f2f2f7;
+    --accent: #34c759;
+    --accent2: #007aff;
+    --red: #ff3b30;
+    --text: #1c1c1e;
+    --text2: #3c3c43cc;
+    --text3: #3c3c4399;
+    --border: #3c3c431a;
     --radius: 14px;
     --radius-sm: 10px;
   }
@@ -32,7 +33,7 @@
   }
 
   .header {
-    background: #111113;
+    background: #ffffff;
     padding: 14px 16px 12px;
     text-align: center;
     border-bottom: 0.5px solid var(--border);
@@ -46,7 +47,7 @@
   .topbar {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 16px;
-    background: #111113;
+    background: #ffffff;
     border-bottom: 0.5px solid var(--border);
     overflow-x: auto;
   }
@@ -133,7 +134,7 @@
   .plan-card:active { transform: scale(0.96); }
   .plan-card.selected {
     border: 1.5px solid var(--accent2);
-    background: #0a84ff12;
+    background: #007aff12;
   }
 
   .pc-label { font-size: 11px; color: var(--text3); }
@@ -195,7 +196,7 @@
     <div class="field-value" id="disp-narx">$0</div>
     <div class="inp-wrap">
       <span class="sym">$</span>
-      <input type="number" id="narx" placeholder="1640" inputmode="decimal" />
+      <input type="number" id="narx" placeholder="" inputmode="decimal" />
     </div>
     <div class="err-msg" id="narx-err">Narx 400$ dan 2000$ gacha bo'lishi kerak</div>
   </div>
@@ -204,7 +205,7 @@
     <div class="field-label">Mijozning mavjud puli (boshlang'ich to'lov)</div>
     <div class="inp-wrap">
       <span class="sym">$</span>
-      <input type="number" id="bosh" placeholder="avtomatik" inputmode="decimal" />
+      <input type="number" id="bosh" placeholder="0" inputmode="decimal" />
     </div>
   </div>
 
@@ -266,6 +267,7 @@ function render() {
     sendBtn.style.display = 'none';
     dispNarx.textContent = '$0';
     savedChip.textContent = 'Saqlangan: $0';
+    document.getElementById('bosh').placeholder = '0';
     grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📱</div>Telefon narxini kiriting</div>';
     return;
   }
@@ -282,7 +284,9 @@ function render() {
   }
   narxErr.style.display = 'none';
 
-  const bosh = isNaN(boshVal) ? minBosh(narxVal) : boshVal;
+  const autoBosh = minBosh(narxVal);
+  const bosh = isNaN(boshVal) ? autoBosh : boshVal;
+  document.getElementById('bosh').placeholder = autoBosh ? '$' + autoBosh : '0';
   const qolgan = narxVal - bosh;
 
   summaryRow.style.display = 'flex';
@@ -296,7 +300,8 @@ function render() {
 
   let html = '';
   for (let oy = 3; oy <= 12; oy++) {
-    const ustama = Math.round(qolgan * FOIZ[oy] / 100);
+    const foizSumma = Math.round(qolgan * FOIZ[oy] / 100);
+    const ustama = foizSumma + 20;
     const jami = qolgan + ustama;
     const oylik = (jami / oy).toFixed(2);
     const sel = selOy === oy ? 'selected' : '';
