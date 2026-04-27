@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Malika Bot — Bo'lib to'lash</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #1c1c1e;
+    --card: #2c2c2e;
+    --card2: #3a3a3c;
+    --accent: #30d158;
+    --accent2: #0a84ff;
+    --red: #ff453a;
+    --text: #ffffff;
+    --text2: #ebebf5cc;
+    --text3: #ebebf560;
+    --border: #ffffff18;
+    --radius: 14px;
+    --radius-sm: 10px;
+  }
+
+  body {
+    font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .header {
+    background: #111113;
+    padding: 14px 16px 12px;
+    text-align: center;
+    border-bottom: 0.5px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-name { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+  .header-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    background: #111113;
+    border-bottom: 0.5px solid var(--border);
+    overflow-x: auto;
+  }
+  .topbar::-webkit-scrollbar { display: none; }
+  .chip {
+    white-space: nowrap;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border);
+    background: var(--card);
+    color: var(--text2);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .chip.active { background: var(--accent2); color: #fff; border-color: transparent; }
+  .badge-chip {
+    white-space: nowrap;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 0.5px solid #30d15840;
+    background: #30d15818;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .content { padding: 16px; }
+
+  .field-group { margin-bottom: 14px; }
+  .field-label { font-size: 13px; color: var(--text3); margin-bottom: 6px; padding-left: 4px; }
+  .field-value { font-size: 22px; font-weight: 600; color: var(--accent); margin-bottom: 8px; padding-left: 4px; }
+
+  .inp-wrap {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    padding: 12px 16px;
+    transition: border-color .2s;
+  }
+  .inp-wrap:focus-within { border-color: var(--accent2); }
+  .inp-wrap .sym { font-size: 18px; font-weight: 600; color: var(--text3); }
+  .inp-wrap input {
+    border: none; outline: none;
+    font-size: 20px; font-weight: 600;
+    flex: 1; background: transparent;
+    color: var(--text);
+    width: 100%;
+    caret-color: var(--accent2);
+  }
+  .inp-wrap input::placeholder { color: var(--text3); font-weight: 400; }
+
+  .err-msg { font-size: 12px; color: var(--red); padding: 4px 4px 0; display: none; }
+
+  .summary-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #30d15815;
+    border: 0.5px solid #30d15830;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+  }
+  .summary-row .sl { font-size: 14px; color: var(--accent); }
+  .summary-row .sv { font-size: 17px; font-weight: 600; color: var(--accent); }
+
+  .plans-title { font-size: 13px; color: var(--text3); margin-bottom: 12px; padding-left: 4px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .plan-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: transform .12s, border-color .15s, background .15s;
+    -webkit-user-select: none;
+  }
+  .plan-card:active { transform: scale(0.96); }
+  .plan-card.selected {
+    border: 1.5px solid var(--accent2);
+    background: #0a84ff12;
+  }
+
+  .pc-label { font-size: 11px; color: var(--text3); }
+  .pc-month { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+  .pc-pay-label { font-size: 11px; color: var(--text3); }
+  .pc-pay { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+  .pc-divider { height: 0.5px; background: var(--border); margin-bottom: 8px; }
+  .pc-footer { display: flex; justify-content: space-between; }
+  .pc-f-label { font-size: 10px; color: var(--text3); margin-bottom: 2px; }
+  .pc-f-val { font-size: 13px; font-weight: 600; color: var(--text2); }
+  .pc-f-val.green { color: var(--accent); }
+
+  .empty-state {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text3);
+    font-size: 14px;
+  }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+  .send-btn {
+    display: none;
+    width: 100%;
+    background: var(--accent2);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 16px;
+    letter-spacing: -0.2px;
+    transition: opacity .15s, transform .12s;
+  }
+  .send-btn:active { transform: scale(0.98); opacity: .9; }
+
+  .spacer { height: 24px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-name">Malika Bot</div>
+  <div class="header-sub">mini ilova</div>
+</div>
+
+<div class="topbar">
+  <div class="chip active">Admin panel</div>
+  <div class="chip">RU</div>
+  <div class="badge-chip" id="saved-chip">Saqlangan: $0</div>
+</div>
+
+<div class="content">
+
+  <div class="field-group">
+    <div class="field-label">Telefon narxi</div>
+    <div class="field-value" id="disp-narx">$0</div>
+    <div class="inp-wrap">
+      <span class="sym">$</span>
+      <input type="number" id="narx" placeholder="1640" inputmode="decimal" />
+    </div>
+    <div class="err-msg" id="narx-err">Narx 400$ dan 2000$ gacha bo'lishi kerak</div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">Mijozning mavjud puli (boshlang'ich to'lov)</div>
+    <div class="inp-wrap">
+      <span class="sym">$</span>
+      <input type="number" id="bosh" placeholder="avtomatik" inputmode="decimal" />
+    </div>
+  </div>
+
+  <div class="summary-row" id="summary-row" style="display:none">
+    <span class="sl">Qoldi&#x1F4B3;</span>
+    <span class="sv" id="disp-qolgan">$0</span>
+  </div>
+
+  <div class="plans-title">To'lov rejalari</div>
+  <div class="grid" id="grid">
+    <div class="empty-state">
+      <div class="empty-icon">📱</div>
+      Telefon narxini kiriting
+    </div>
+  </div>
+
+  <button class="send-btn" id="send-btn" onclick="sendToTelegram()">
+    ✅ Tanlangan rejani yuborish
+  </button>
+
+  <div class="spacer"></div>
+</div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+const FOIZ = {3:20,4:25,5:25,6:30,7:35,8:40,9:40,10:45,11:45,12:50};
+
+function minBosh(n) {
+  if (n>=400&&n<=599) return 100;
+  if (n>=600&&n<=649) return 150;
+  if (n>=650&&n<=749) return 180;
+  if (n>=750&&n<=799) return 220;
+  if (n>=800&&n<=899) return 250;
+  if (n>=900) return 300;
+  return 0;
+}
+
+function fmt(n, dec=2) {
+  return '$' + parseFloat(n).toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+let selOy = null;
+
+function render() {
+  const narxVal = parseFloat(document.getElementById('narx').value);
+  const boshVal = parseFloat(document.getElementById('bosh').value);
+  const narxErr = document.getElementById('narx-err');
+  const grid = document.getElementById('grid');
+  const summaryRow = document.getElementById('summary-row');
+  const sendBtn = document.getElementById('send-btn');
+  const savedChip = document.getElementById('saved-chip');
+  const dispNarx = document.getElementById('disp-narx');
+
+  if (!narxVal || isNaN(narxVal)) {
+    narxErr.style.display = 'none';
+    summaryRow.style.display = 'none';
+    sendBtn.style.display = 'none';
+    dispNarx.textContent = '$0';
+    savedChip.textContent = 'Saqlangan: $0';
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📱</div>Telefon narxini kiriting</div>';
+    return;
+  }
+
+  dispNarx.textContent = fmt(narxVal, 0);
+  savedChip.textContent = 'Saqlangan: ' + fmt(narxVal, 0);
+
+  if (narxVal < 400 || narxVal > 2000) {
+    narxErr.style.display = 'block';
+    summaryRow.style.display = 'none';
+    sendBtn.style.display = 'none';
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div>Narx 400$—2000$ oralig\'ida bo\'lsin</div>';
+    return;
+  }
+  narxErr.style.display = 'none';
+
+  const bosh = isNaN(boshVal) ? minBosh(narxVal) : boshVal;
+  const qolgan = narxVal - bosh;
+
+  summaryRow.style.display = 'flex';
+  document.getElementById('disp-qolgan').textContent = fmt(qolgan, 0);
+
+  if (qolgan <= 0) {
+    sendBtn.style.display = 'none';
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div>Boshlang\'ich to\'lov narxdan katta</div>';
+    return;
+  }
+
+  let html = '';
+  for (let oy = 3; oy <= 12; oy++) {
+    const ustama = Math.round(qolgan * FOIZ[oy] / 100);
+    const jami = qolgan + ustama;
+    const oylik = (jami / oy).toFixed(2);
+    const sel = selOy === oy ? 'selected' : '';
+    html += `
+    <div class="plan-card ${sel}" onclick="pick(${oy},${oylik},${jami},${ustama},${narxVal},${bosh})">
+      <div class="pc-label">Muddat</div>
+      <div class="pc-month">${oy} oy</div>
+      <div class="pc-pay-label">Oylik to'lov</div>
+      <div class="pc-pay">${fmt(oylik)}</div>
+      <div class="pc-divider"></div>
+      <div class="pc-footer">
+        <div>
+          <div class="pc-f-label">Jami</div>
+          <div class="pc-f-val">${fmt(jami, 0)}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="pc-f-label">Ustama</div>
+          <div class="pc-f-val green">+${fmt(ustama, 0)}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  grid.innerHTML = html;
+  sendBtn.style.display = selOy ? 'block' : 'none';
+}
+
+let selData = null;
+function pick(oy, oylik, jami, ustama, narx, bosh) {
+  selOy = oy;
+  selData = {oy, oylik, jami, ustama, narx, bosh};
+  render();
+  document.getElementById('send-btn').style.display = 'block';
+  document.getElementById('send-btn').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function sendToTelegram() {
+  if (!selData) return;
+  const {oy, oylik, jami, ustama, narx, bosh} = selData;
+  const qolgan = narx - bosh;
+  const msg = `🏪 *A27 DO'KON — BRO CENTRE*\n` +
+    `👤 Sotuvchi: *Sobir aka*\n` +
+    `📞 Tel: +998 99 488 04 14\n\n` +
+    `━━━━━━━━━━━━━━\n` +
+    `🏷 *NARX:* $${narx}\n` +
+    `━━━━━━━━━━━━━━\n\n` +
+    `💰 *Boshlang'ich to'lov:* $${bosh}\n` +
+    `💳 *Qolgan summa:* $${qolgan}\n\n` +
+    `📅 *BO'LIB TO'LASH JADVALI*\n\n` +
+    `🗓 Muddat: *${oy} oy*\n` +
+    `📆 Oylik to'lov: *$${parseFloat(oylik).toFixed(2)}*\n` +
+    `💵 Jami to'lov: *$${jami}*\n` +
+    `📈 Ustama: *+$${ustama}*`;
+
+  if (tg) {
+    tg.sendData(msg);
+  } else {
+    alert('Telegram WebApp ulangan emas.\n\nXabar:\n' + msg.replace(/\*/g,''));
+  }
+}
+
+document.getElementById('narx').addEventListener('input', () => { selOy = null; selData = null; render(); });
+document.getElementById('bosh').addEventListener('input', () => { selOy = null; selData = null; render(); });
+</script>
+</body>
+</html>
